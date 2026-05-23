@@ -3,7 +3,6 @@
 """
 
 import tkinter as tk
-from tkinter import ttk
 from pomodoro_core import PomodoroEngine, Phase
 
 # ---------- 暖色调色板 ----------
@@ -17,13 +16,12 @@ COLORS = {
     "button_bg_break": "#F4A261",
     "input_bg": "#3D322D",
     "input_fg": "#FFE8D6",
-    "input_border": "#5A4A3A",
     "stats_fg": "#B8A89A",
 }
 
 FONTS = {
     "timer": ("Segoe UI", 52, "bold"),
-    "phase": ("Segoe UI", 18),
+    "phase": ("Segoe UI", 20),
     "stats": ("Segoe UI", 12),
     "label": ("Segoe UI", 11),
     "button": ("Segoe UI", 13, "bold"),
@@ -37,7 +35,7 @@ class PomodoroApp(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("番茄钟")
+        self.title("🍅 番茄钟")
         self.configure(bg=COLORS["bg"])
         self.resizable(False, False)
 
@@ -50,10 +48,21 @@ class PomodoroApp(tk.Tk):
     # ===================== UI 构建 =====================
 
     def _build_ui(self):
+        self._build_title()
         self._build_timer_canvas()
         self._build_stats_bar()
         self._build_settings()
         self._build_controls()
+
+    def _build_title(self):
+        """页头标题"""
+        tk.Label(
+            self,
+            text="🍅 番 茄 钟 🍅",
+            font=FONTS["title"],
+            fg=COLORS["button_bg_work"],
+            bg=COLORS["bg"],
+        ).pack(pady=(24, 0))
 
     def _build_timer_canvas(self):
         """圆形进度条 + 中心倒计时"""
@@ -65,7 +74,7 @@ class PomodoroApp(tk.Tk):
             bg=COLORS["bg"],
             highlightthickness=0,
         )
-        self.canvas.pack(pady=(20, 0))
+        self.canvas.pack(pady=(10, 0))
 
         # 圆弧参数
         self.pad = 25
@@ -89,35 +98,48 @@ class PomodoroApp(tk.Tk):
             start=90, extent=0,
             style="arc", width=self.arc_width,
             outline=COLORS["button_bg_work"],
+            capstyle="round",
         )
 
         # 中心倒计时文字
         cy = self.canvas_size // 2
         self.timer_text = self.canvas.create_text(
-            self.canvas_size // 2, cy - 15,
+            self.canvas_size // 2, cy - 18,
             text="25:00",
             font=FONTS["timer"],
             fill=COLORS["text_primary"],
             anchor="center",
         )
 
-        # 阶段名称
+        # 阶段名称（含 emoji）
         self.phase_text = self.canvas.create_text(
-            self.canvas_size // 2, cy + 40,
-            text="工作中",
+            self.canvas_size // 2, cy + 35,
+            text="🍅 工作中",
             font=FONTS["phase"],
             fill=COLORS["text_secondary"],
+            anchor="center",
+        )
+
+        # 装饰小番茄
+        self.canvas.create_text(
+            18, self.canvas_size - 18,
+            text="🍅", font=("Segoe UI", 14),
+            anchor="center",
+        )
+        self.canvas.create_text(
+            self.canvas_size - 18, 18,
+            text="⏱", font=("Segoe UI", 14),
             anchor="center",
         )
 
     def _build_stats_bar(self):
         """番茄进度信息"""
         frame = tk.Frame(self, bg=COLORS["bg"])
-        frame.pack(pady=(8, 0))
+        frame.pack(pady=(4, 0))
 
         self.stats_label = tk.Label(
             frame,
-            text="番茄 1/4  ·  已完成 0 个",
+            text="🍅 番茄 1/4  ·  ✅ 已完成 0 个",
             font=FONTS["stats"],
             fg=COLORS["stats_fg"],
             bg=COLORS["bg"],
@@ -126,34 +148,34 @@ class PomodoroApp(tk.Tk):
 
     def _build_settings(self):
         """可自定义的参数区域"""
-        frame = tk.Frame(self, bg=COLORS["frame_bg"], padx=20, pady=15)
-        frame.pack(pady=(16, 0), padx=30, fill="x")
+        frame = tk.Frame(self, bg=COLORS["frame_bg"], padx=24, pady=14)
+        frame.pack(pady=(14, 0), padx=30, fill="x")
 
         # 标题
         tk.Label(
-            frame, text="自定义设置",
+            frame, text="⚙️ 自定义设置",
             font=FONTS["header"],
             fg=COLORS["text_secondary"], bg=COLORS["frame_bg"],
-        ).grid(row=0, column=0, columnspan=4, sticky="w", pady=(0, 10))
+        ).grid(row=0, column=0, columnspan=6, sticky="w", pady=(0, 10))
 
-        # 参数配置
+        # 参数配置: (label, key, default, min, max) 带 emoji
         configs = [
-            ("工作时间", "work", 25, 1, 120),
-            ("短休息", "short", 5, 1, 30),
-            ("长休息", "long", 15, 1, 60),
-            ("每轮番茄", "cycles", 4, 1, 10),
+            ("⏱ 工作时间", "work", 25, 1, 120),
+            ("☕ 短休息",  "short", 5, 1, 30),
+            ("🧘 长休息",  "long", 15, 1, 60),
+            ("🔄 每轮",    "cycles", 4, 1, 10),
         ]
 
         self.inputs = {}
         for i, (label, key, default, min_v, max_v) in enumerate(configs):
-            c = i % 2
+            c = (i % 2) * 3
             r = i // 2 + 1
 
             tk.Label(
                 frame, text=label,
                 font=FONTS["label"],
                 fg=COLORS["text_primary"], bg=COLORS["frame_bg"],
-            ).grid(row=r, column=c * 2, sticky="e", padx=(0, 4), pady=4)
+            ).grid(row=r, column=c, sticky="e", padx=(0, 4), pady=4)
 
             var = tk.StringVar(value=str(default))
             entry = tk.Entry(
@@ -163,25 +185,32 @@ class PomodoroApp(tk.Tk):
                 bg=COLORS["input_bg"], fg=COLORS["input_fg"],
                 relief="flat", bd=0,
             )
-            entry.grid(row=r, column=c * 2 + 1, sticky="w", padx=(0, 16), pady=4)
+            entry.grid(row=r, column=c + 1, sticky="w", pady=4)
+
+            tk.Label(
+                frame, text="分钟" if key != "cycles" else "个",
+                font=FONTS["header"],
+                fg=COLORS["text_secondary"], bg=COLORS["frame_bg"],
+            ).grid(row=r, column=c + 2, sticky="w", padx=(2, 16), pady=4)
+
             self.inputs[key] = (var, min_v, max_v)
 
-        # 应用按钮
+        # 应用按钮 — 单独一行居中
         self.apply_btn = tk.Button(
-            frame, text="应用",
+            frame, text="✅ 应用",
             font=FONTS["header"],
             bg=COLORS["button_bg_work"], fg="#1C1410",
             activebackground="#E55A2B", activeforeground="#1C1410",
-            relief="flat", bd=0, padx=14, pady=2,
+            relief="flat", bd=0, padx=18, pady=3,
             cursor="hand2",
             command=self._apply_settings,
         )
-        self.apply_btn.grid(row=1, column=2, rowspan=2, padx=(20, 0))
+        self.apply_btn.grid(row=3, column=0, columnspan=6, pady=(6, 0))
 
     def _build_controls(self):
         """开始 / 暂停 / 重置 按钮"""
         frame = tk.Frame(self, bg=COLORS["bg"])
-        frame.pack(pady=(20, 20))
+        frame.pack(pady=(18, 22))
 
         self.toggle_btn = tk.Button(
             frame,
@@ -212,6 +241,8 @@ class PomodoroApp(tk.Tk):
     # ===================== 事件处理 =====================
 
     def _apply_settings(self):
+        defaults = {"work": 25, "short": 5, "long": 15, "cycles": 4}
+
         def _get(key):
             var, min_v, max_v = self.inputs[key]
             try:
@@ -220,8 +251,6 @@ class PomodoroApp(tk.Tk):
             except ValueError:
                 var.set(str(defaults[key]))
                 return defaults[key]
-
-        defaults = {"work": 25, "short": 5, "long": 15, "cycles": 4}
 
         work = _get("work")
         short = _get("short")
@@ -248,8 +277,15 @@ class PomodoroApp(tk.Tk):
         m, s = divmod(eng.remaining, 60)
         self.canvas.itemconfig(self.timer_text, text=f"{m:02d}:{s:02d}")
 
-        # 阶段名称 + 颜色
-        self.canvas.itemconfig(self.phase_text, text=eng.phase.label)
+        # 阶段名称 + 颜色（含 emoji）
+        phase_emojis = {
+            Phase.WORK: "🍅",
+            Phase.SHORT_BREAK: "☕",
+            Phase.LONG_BREAK: "🧘",
+        }
+        emoji = phase_emojis.get(eng.phase, "🍅")
+        self.canvas.itemconfig(self.phase_text, text=f"{emoji} {eng.phase.label}")
+
         color = eng.phase.color
         self.canvas.itemconfig(self.phase_text, fill=color)
         self.canvas.itemconfig(self.timer_text, fill=color)
@@ -260,7 +296,7 @@ class PomodoroApp(tk.Tk):
         self.canvas.itemconfig(self.progress_arc, extent=extent)
 
         # 统计文字
-        stats = f"番茄 {eng.current_in_cycle}/{eng.cycles}  ·  已完成 {eng.completed} 个"
+        stats = f"🍅 番茄 {eng.current_in_cycle}/{eng.cycles}  ·  ✅ 已完成 {eng.completed} 个"
         self.stats_label.config(text=stats)
 
         # 切换按钮文字

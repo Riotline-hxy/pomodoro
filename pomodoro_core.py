@@ -68,15 +68,16 @@ class PomodoroEngine:
         return not self.running and self.remaining < self.total_seconds
 
     def tick(self):
-        """每秒调用一次。返回 True 表示阶段发生了切换。"""
+        """每秒调用一次。返回刚结束的阶段，无切换返回 None。"""
         if not self.running:
-            return False
+            return None
 
         self.remaining -= 1
         if self.remaining <= 0:
+            ended = self.phase
             self._next_phase()
-            return True
-        return False
+            return ended
+        return None
 
     def _next_phase(self):
         if self.phase == Phase.WORK:

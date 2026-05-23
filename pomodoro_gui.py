@@ -4,6 +4,7 @@
 
 import tkinter as tk
 from pomodoro_core import PomodoroEngine, Phase
+from sound_manager import play_start, play_work_end, play_short_break_end, play_long_break_end
 
 # ---------- 暖色调色板 ----------
 COLORS = {
@@ -260,7 +261,10 @@ class PomodoroApp(tk.Tk):
         self._refresh_display()
 
     def _on_toggle(self):
+        was_running = self.engine.running
         self.engine.toggle()
+        if not was_running and self.engine.running:
+            play_start()
         self._refresh_display()
 
     def _on_reset(self):
@@ -314,8 +318,14 @@ class PomodoroApp(tk.Tk):
         self.toggle_btn.config(bg=btn_bg, activebackground=btn_bg)
 
     def _update_loop(self):
-        """每秒更新一次"""
-        self.engine.tick()
+        """每秒更新一次，检测阶段切换并播放音效"""
+        ended = self.engine.tick()
+        if ended == Phase.WORK:
+            play_work_end()
+        elif ended == Phase.SHORT_BREAK:
+            play_short_break_end()
+        elif ended == Phase.LONG_BREAK:
+            play_long_break_end()
         self._refresh_display()
         self.after(1000, self._update_loop)
 

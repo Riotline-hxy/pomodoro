@@ -98,7 +98,6 @@ class PomodoroApp(tk.Tk):
             start=90, extent=0,
             style="arc", width=self.arc_width,
             outline=COLORS["button_bg_work"],
-            capstyle="round",
         )
 
         # 中心倒计时文字
